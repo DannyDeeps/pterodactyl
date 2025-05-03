@@ -1,5 +1,5 @@
 #!/bin/ash
-clear
+set -e
 cd /home/container
 
 # Output PHP version
