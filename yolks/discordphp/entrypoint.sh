@@ -1,6 +1,9 @@
 #!/bin/bash
 cd /home/container
 
+# Output Composer version
+composer --version || { echo "[Composer] Error: Composer not detected."; exit 1; }
+
 # Output PHP version
 php --version
 
