@@ -14,16 +14,15 @@ LABEL author="DannyDeeps" maintainer="dannyhuggins@proton.me"
 #     && echo "USER=container" >> /etc/environment \
 #     && echo "HOME=/home/container" >> /etc/environment
 
-RUN apk update && apk add --no-cache git unzip curl \
-  && adduser -D -h /home/container container
+RUN apk update && adduser -D -h /home/container container
 
 USER container
 ENV USER=container HOME=/home/container
 WORKDIR /home/container
 
-RUN git clone https://github.com/DannyDeeps/holorick.git . \
-  && curl -sS https://getcomposer.org/installer | php \
-  && php composer.phar install --no-dev --optimize-autoloader
+# RUN git clone https://github.com/DannyDeeps/holorick.git . \
+#   && curl -sS https://getcomposer.org/installer | php \
+#   && php composer.phar install --no-dev --optimize-autoloader
 
 STOPSIGNAL SIGINT
 
