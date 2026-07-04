@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-cd /home/container
+cd /mnt/server
 
 SERVER_NAME="${SERVER_NAME:-My Zomboid Server}"
 STEAM_USER="${STEAM_USER:-anonymous}"
@@ -10,25 +10,25 @@ STEAM_PASS="${STEAM_PASS:-}"
 STEAM_BRANCH="${STEAM_BRANCH:-public}"
 APP_ID=380870
 
-export HOME=/home/container
+export HOME=/mnt/server
 
 if [ -n "${STEAM_PASS}" ]; then
     steamcmd \
-        +force_install_dir /home/container \
+        +force_install_dir /mnt/server \
         +login "${STEAM_USER}" "${STEAM_PASS}" \
         +app_update "${APP_ID}" -beta "${STEAM_BRANCH}" validate \
         +quit
 else
     steamcmd \
-        +force_install_dir /home/container \
+        +force_install_dir /mnt/server \
         +login "${STEAM_USER}" \
         +app_update "${APP_ID}" -beta "${STEAM_BRANCH}" validate \
         +quit
 fi
 
-mkdir -p /home/container/Zomboid/Server
+mkdir -p /mnt/server/Zomboid/Server
 
-INI_FILE="/home/container/Zomboid/Server/${SERVER_NAME}.ini"
+INI_FILE="/mnt/server/Zomboid/Server/${SERVER_NAME}.ini"
 if [ ! -f "${INI_FILE}" ]; then
     cat > "${INI_FILE}" << EOF
 DefaultPort=${SERVER_PORT:-16261}
@@ -44,5 +44,4 @@ EOF
     echo "Created default server config: ${INI_FILE}"
 fi
 
-chown -R container:container /home/container 2>/dev/null || true
 echo "Installation complete."

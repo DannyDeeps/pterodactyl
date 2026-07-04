@@ -19,6 +19,7 @@ RUN dpkg --add-architecture i386 \
         unzip \
         wget \
         locales \
+        iproute2 \
         lib32gcc-s1 \
         lib32stdc++6 \
         lib32z1 \
