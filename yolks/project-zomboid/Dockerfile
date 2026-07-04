@@ -34,9 +34,10 @@ RUN mkdir -p /opt/steamcmd \
     && curl -sqL "https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz" -o /tmp/steamcmd.tar.gz \
     && tar -xzf /tmp/steamcmd.tar.gz -C /opt/steamcmd \
     && rm /tmp/steamcmd.tar.gz \
-    && ln -sf /opt/steamcmd/steamcmd.sh /usr/local/bin/steamcmd \
-    && ln -sf /opt/steamcmd/steamcmd.sh /usr/bin/steamcmd \
-    && chmod +x /opt/steamcmd/steamcmd.sh
+    && chmod +x /opt/steamcmd/steamcmd.sh \
+    && printf '#!/bin/bash\nSTEAMCMD_DIR="/opt/steamcmd"\nexec "$STEAMCMD_DIR/steamcmd.sh" "$@"\n' > /usr/local/bin/steamcmd \
+    && chmod +x /usr/local/bin/steamcmd \
+    && ln -sf /usr/local/bin/steamcmd /usr/bin/steamcmd
 
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US.UTF-8 \
