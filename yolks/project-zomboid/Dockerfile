@@ -35,6 +35,7 @@ RUN mkdir -p /opt/steamcmd \
     && tar -xzf /tmp/steamcmd.tar.gz -C /opt/steamcmd \
     && rm /tmp/steamcmd.tar.gz \
     && chmod +x /opt/steamcmd/steamcmd.sh \
+    && find /opt/steamcmd -type f -exec chmod o+x {} + \
     && printf '#!/bin/bash\nSTEAMCMD_DIR="/opt/steamcmd"\nexec "$STEAMCMD_DIR/steamcmd.sh" "$@"\n' > /usr/local/bin/steamcmd \
     && chmod +x /usr/local/bin/steamcmd \
     && ln -sf /usr/local/bin/steamcmd /usr/bin/steamcmd
