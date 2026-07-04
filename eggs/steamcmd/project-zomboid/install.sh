@@ -27,53 +27,8 @@ echo "Installing Project Zomboid Dedicated Server..."
 echo "Game installed. Setting permissions..."
 chmod -R o+w /mnt/server/steamapps/ || true
 
-## download workshop mods
-if [ -n "${WORKSHOP_IDS:-}" ]; then
-    echo "Downloading workshop mods..."
-    WS_ARGS=()
-    OLD_IFS="${IFS}"
-    IFS=";,"
-    for wid in ${WORKSHOP_IDS}; do
-        wid_trimmed="$(echo "${wid}" | xargs)"
-        if [ -n "${wid_trimmed}" ]; then
-            echo "  Queueing workshop item: ${wid_trimmed}"
-            WS_ARGS+=(+workshop_download_item 108600 "${wid_trimmed}")
-        fi
-    done
-    IFS="${OLD_IFS}"
-    if [ ${#WS_ARGS[@]} -gt 0 ]; then
-        ./steamcmd/steamcmd.sh \
-            +login anonymous \
-            "${WS_ARGS[@]}" \
-            +quit || echo "  [WARN] SteamCMD workshop download returned exit code $?"
-    fi
-    echo "Workshop mod download complete."
-    [ -d /mnt/server/steamapps/workshop/ ] && chmod -R o+w /mnt/server/steamapps/workshop/ || true
-fi
-
-## create symlinks for workshop mods
-
-echo "Creating symlinks for workshop mods..."
+echo "Creating server directories..."
 mkdir -p /mnt/server/Zomboid/Server /mnt/server/Zomboid/mods
-for wid_dir in /mnt/server/steamapps/workshop/content/108600/*/; do
-    if [ -d "${wid_dir}" ]; then
-        for mod_dir in "${wid_dir}"mods/*/; do
-            if [ -d "${mod_dir}" ]; then
-                mod_info="${mod_dir}mod.info"
-                if [ -f "${mod_info}" ]; then
-                    mod_id="$(sed -n '/^[Ii][Dd]=/{s/^[Ii][Dd]=//;s/\r$//;p;q}' "${mod_info}")"
-                    if [ -n "${mod_id}" ]; then
-                        target="/mnt/server/Zomboid/mods/${mod_id}"
-                        if [ ! -e "${target}" ]; then
-                            ln -s "${mod_dir}" "${target}"
-                            echo "  Linked ${mod_id}"
-                        fi
-                    fi
-                fi
-            fi
-        done
-    fi
-done
 
 ## create start.sh
 echo "Generating start.sh..."
@@ -101,47 +56,7 @@ if [ "${AUTO_UPDATE}" = "true" ]; then
     steamcmd         +force_install_dir /home/container         +login anonymous         +app_update 380870 -beta "${STEAM_BRANCH}" validate         +quit || echo "[WARN] SteamCMD auto-update returned exit code $?, continuing..."
 fi
 
-if [ -n "${WORKSHOP_IDS:-}" ]; then
-    echo "Downloading/updating workshop mods..."
-    WS_ARGS=()
-    OLD_IFS="${IFS}"
-    IFS=";,"
-    for wid in ${WORKSHOP_IDS}; do
-        wid_trimmed="$(echo "${wid}" | xargs)"
-        if [ -n "${wid_trimmed}" ]; then
-            echo "  Workshop item: ${wid_trimmed}"
-            WS_ARGS+=(+workshop_download_item 108600 "${wid_trimmed}")
-        fi
-    done
-    IFS="${OLD_IFS}"
-    if [ ${#WS_ARGS[@]} -gt 0 ]; then
-        steamcmd             +force_install_dir /home/container             +login anonymous             "${WS_ARGS[@]}"             +quit || echo "  [WARN] SteamCMD workshop download returned exit code $?"
-    fi
-    echo "Workshop mod download complete."
-fi
-
 mkdir -p /home/container/Zomboid/{Server,mods}
-
-echo "Creating/updating symlinks for workshop mods..."
-for wid_dir in /home/container/steamapps/workshop/content/108600/*/; do
-    if [ -d "${wid_dir}" ]; then
-        for mod_dir in "${wid_dir}"mods/*/; do
-            if [ -d "${mod_dir}" ]; then
-                mod_info="${mod_dir}mod.info"
-                if [ -f "${mod_info}" ]; then
-                    mod_id="$(sed -n '/^[Ii][Dd]=/{s/^[Ii][Dd]=//;s/\r$//;p;q}' "${mod_info}")"
-                    if [ -n "${mod_id}" ]; then
-                        target="/home/container/Zomboid/mods/${mod_id}"
-                        if [ ! -e "${target}" ]; then
-                            ln -s "${mod_dir}" "${target}"
-                            echo "  Linked ${mod_id}"
-                        fi
-                    fi
-                fi
-            fi
-        done
-    fi
-done
 
 INI_FILE="/home/container/Zomboid/Server/${SERVER_NAME}.ini"
 
