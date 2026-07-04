@@ -6,7 +6,7 @@
   "exported_at": "2026-07-04T00:00:00+00:00",
   "name": "Project Zomboid",
   "author": "dannyhuggins@proton.me",
-  "description": "Custom-maintained Project Zomboid dedicated server. Supports Steam Workshop mods, multi-player configuration, and auto-updates. Build 41+ compatible.",
+  "description": "Custom-maintained Project Zomboid dedicated server. Supports Steam Workshop mods, multi-player configuration, and auto-updates. Uses Pterodactyl allocation port. Build 41+ compatible.",
   "features": null,
   "docker_images": {
     "Project Zomboid (Debian + SteamCMD + Java 17)": "ghcr.io/dannydeeps/yolks:project-zomboid"
@@ -34,7 +34,8 @@
       "default_value": "My Zomboid Server",
       "user_viewable": true,
       "user_editable": true,
-      "rules": "required|string|max:80"
+      "rules": "required|string|max:80",
+      "field_type": "text"
     },
     {
       "name": "Admin Password",
@@ -43,16 +44,8 @@
       "default_value": "",
       "user_viewable": false,
       "user_editable": true,
-      "rules": "nullable|string|max:40"
-    },
-    {
-      "name": "Server Port",
-      "description": "UDP port the server will listen on",
-      "env_variable": "SERVER_PORT",
-      "default_value": "16261",
-      "user_viewable": true,
-      "user_editable": true,
-      "rules": "required|integer|min:1|max:65535"
+      "rules": "nullable|string|max:40",
+      "field_type": "text"
     },
     {
       "name": "Max Players",
@@ -61,7 +54,8 @@
       "default_value": "16",
       "user_viewable": true,
       "user_editable": true,
-      "rules": "required|integer|min:1|max:100"
+      "rules": "required|integer|min:1|max:100",
+      "field_type": "text"
     },
     {
       "name": "Public Server",
@@ -70,7 +64,8 @@
       "default_value": "false",
       "user_viewable": true,
       "user_editable": true,
-      "rules": "required|string|in:true,false"
+      "rules": "required|string|in:true,false",
+      "field_type": "text"
     },
     {
       "name": "Pause When Empty",
@@ -79,7 +74,8 @@
       "default_value": "true",
       "user_viewable": true,
       "user_editable": true,
-      "rules": "required|string|in:true,false"
+      "rules": "required|string|in:true,false",
+      "field_type": "text"
     },
     {
       "name": "Steam Branch",
@@ -88,7 +84,8 @@
       "default_value": "public",
       "user_viewable": true,
       "user_editable": true,
-      "rules": "required|string|max:40"
+      "rules": "required|string|max:40",
+      "field_type": "text"
     },
     {
       "name": "Mod IDs",
@@ -97,7 +94,8 @@
       "default_value": "",
       "user_viewable": true,
       "user_editable": true,
-      "rules": "nullable|string|max:2000"
+      "rules": "nullable|string|max:2000",
+      "field_type": "text"
     },
     {
       "name": "Workshop Item IDs",
@@ -106,7 +104,8 @@
       "default_value": "",
       "user_viewable": true,
       "user_editable": true,
-      "rules": "nullable|string|max:2000"
+      "rules": "nullable|string|max:2000",
+      "field_type": "text"
     },
     {
       "name": "Preset Admin Username",
@@ -115,7 +114,8 @@
       "default_value": "admin",
       "user_viewable": true,
       "user_editable": true,
-      "rules": "required|string|max:30"
+      "rules": "required|string|max:30",
+      "field_type": "text"
     },
     {
       "name": "Server Password",
@@ -124,7 +124,8 @@
       "default_value": "",
       "user_viewable": false,
       "user_editable": true,
-      "rules": "nullable|string|max:40"
+      "rules": "nullable|string|max:40",
+      "field_type": "text"
     },
     {
       "name": "JVM Arguments",
@@ -133,7 +134,8 @@
       "default_value": "-Xmx8G -Xms4G",
       "user_viewable": true,
       "user_editable": true,
-      "rules": "required|string|max:500"
+      "rules": "required|string|max:500",
+      "field_type": "text"
     },
     {
       "name": "Auto Update",
@@ -142,7 +144,8 @@
       "default_value": "true",
       "user_viewable": true,
       "user_editable": true,
-      "rules": "required|string|in:true,false"
+      "rules": "required|string|in:true,false",
+      "field_type": "text"
     }
   ]
 }
