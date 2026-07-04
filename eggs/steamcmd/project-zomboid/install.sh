@@ -51,10 +51,35 @@ if [ -n "${WORKSHOP_IDS:-}" ]; then
     chmod -R o+w /mnt/server/steamapps/workshop/ || true
 fi
 
-## download workshop collection
+## download workshop collection via Steam API
 if [ -n "${COLLECTION_ID:-}" ]; then
-    echo "Downloading workshop collection: ${COLLECTION_ID}..."
-    ./steamcmd/steamcmd.sh         +login anonymous         +workshop_download_collection 108600 "${COLLECTION_ID}"         +quit || echo "  [WARN] SteamCMD collection download returned exit code $?"
+    echo "Resolving workshop collection: ${COLLECTION_ID}..."
+    COLLECTION_JSON="$(curl -s -X POST https://api.steampowered.com/ISteamRemoteStorage/GetCollectionDetails/v1/ \
+        -d "collectioncount=1" \
+        -d "publishedfileids[0]=${COLLECTION_ID}")"
+    COLLECTION_ITEMS="$(echo "${COLLECTION_JSON}" | python3 -c "
+import json,sys
+data = json.load(sys.stdin)
+items = []
+for child in data['response']['collectiondetails'][0]['children']:
+    items.append(str(child['publishedfileid']))
+print(','.join(items))
+" 2>/dev/null)"
+    if [ -n "${COLLECTION_ITEMS}" ]; then
+        echo "Collection contains items: ${COLLECTION_ITEMS}"
+        OLD_IFS="${IFS}"
+        IFS=","
+        for ci in ${COLLECTION_ITEMS}; do
+            echo "  Downloading workshop item: ${ci}"
+            ./steamcmd/steamcmd.sh \
+                +login anonymous \
+                +workshop_download_item 108600 "${ci}" \
+                +quit || echo "  [WARN] Failed to download collection item ${ci}"
+        done
+        IFS="${OLD_IFS}"
+    else
+        echo "  [WARN] Failed to resolve collection ${COLLECTION_ID} or collection is empty"
+    fi
     echo "Collection download complete."
     chmod -R o+w /mnt/server/steamapps/workshop/ || true
 fi
@@ -205,8 +230,34 @@ if [ -n "${WORKSHOP_IDS:-}" ]; then
 fi
 
 if [ -n "${COLLECTION_ID:-}" ]; then
-    echo "Downloading workshop collection: ${COLLECTION_ID}..."
-    steamcmd         +force_install_dir /home/container         +login anonymous         +workshop_download_collection 108600 "${COLLECTION_ID}"         +quit || echo "  [WARN] SteamCMD collection download returned exit code $?"
+    echo "Resolving workshop collection: ${COLLECTION_ID}..."
+    COLLECTION_JSON="$(curl -s -X POST https://api.steampowered.com/ISteamRemoteStorage/GetCollectionDetails/v1/ \
+        -d "collectioncount=1" \
+        -d "publishedfileids[0]=${COLLECTION_ID}")"
+    COLLECTION_ITEMS="$(echo "${COLLECTION_JSON}" | python3 -c "
+import json,sys
+data = json.load(sys.stdin)
+items = []
+for child in data['response']['collectiondetails'][0]['children']:
+    items.append(str(child['publishedfileid']))
+print(','.join(items))
+" 2>/dev/null)"
+    if [ -n "${COLLECTION_ITEMS}" ]; then
+        echo "Collection contains items: ${COLLECTION_ITEMS}"
+        OLD_IFS="${IFS}"
+        IFS=","
+        for ci in ${COLLECTION_ITEMS}; do
+            echo "  Downloading workshop item: ${ci}"
+            steamcmd \
+                +force_install_dir /home/container \
+                +login anonymous \
+                +workshop_download_item 108600 "${ci}" \
+                +quit || echo "  [WARN] Failed to download collection item ${ci}"
+        done
+        IFS="${OLD_IFS}"
+    else
+        echo "  [WARN] Failed to resolve collection ${COLLECTION_ID} or collection is empty"
+    fi
     echo "Collection download complete."
 fi
 
