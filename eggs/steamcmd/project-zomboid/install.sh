@@ -84,82 +84,7 @@ print(','.join(items))
     chmod -R o+w /mnt/server/steamapps/workshop/ || true
 fi
 
-## detect mod IDs and create symlinks
-echo "Detecting mod IDs from workshop items..."
-DETECTED_MODS=""
-for wid_dir in /mnt/server/steamapps/workshop/content/108600/*/; do
-    if [ -d "${wid_dir}" ]; then
-        for mod_info in "${wid_dir}"mods/*/mod.info; do
-            if [ -f "${mod_info}" ]; then
-                mod_id="$(sed -n '/^[Ii][Dd]=/{s/^[Ii][Dd]=//;s/\r$//;p;q}' "${mod_info}")"
-                if [ -n "${mod_id}" ]; then
-                    if [ -z "${DETECTED_MODS}" ]; then
-                        DETECTED_MODS="${mod_id}"
-                    else
-                        DETECTED_MODS="${DETECTED_MODS};${mod_id}"
-                    fi
-                fi
-            fi
-        done
-    fi
-done
-FINAL_MODS="${DETECTED_MODS}"
-if [ -n "${MOD_IDS:-}" ]; then
-    FILTERED_MOD_IDS=""
-    OLD_IFS="${IFS}"
-    IFS=";,"
-    for mid in ${MOD_IDS}; do
-        mid_trimmed="$(echo "${mid}" | xargs)"
-        if [ -n "${mid_trimmed}" ]; then
-            # Skip purely numeric IDs that look like workshop IDs
-            if echo "${mid_trimmed}" | grep -qE '^[0-9]+$'; then
-                continue
-            fi
-            if [ -z "${FILTERED_MOD_IDS}" ]; then
-                FILTERED_MOD_IDS="${mid_trimmed}"
-            else
-                FILTERED_MOD_IDS="${FILTERED_MOD_IDS};${mid_trimmed}"
-            fi
-        fi
-    done
-    IFS="${OLD_IFS}"
-    if [ -n "${FILTERED_MOD_IDS}" ]; then
-        if [ -n "${FINAL_MODS}" ]; then
-            FINAL_MODS="${FINAL_MODS};${FILTERED_MOD_IDS}"
-        else
-            FINAL_MODS="${FILTERED_MOD_IDS}"
-        fi
-    fi
-fi
-if [ -n "${FINAL_MODS}" ]; then
-    echo "Detected mod IDs: ${FINAL_MODS}"
-fi
-
-## detect workshop item IDs from downloaded content
-echo "Detecting downloaded workshop item IDs..."
-DETECTED_WS_IDS=""
-for wid_dir in /mnt/server/steamapps/workshop/content/108600/*/; do
-    if [ -d "${wid_dir}" ]; then
-        wid="$(basename "${wid_dir}")"
-        if [ -z "${DETECTED_WS_IDS}" ]; then
-            DETECTED_WS_IDS="${wid}"
-        else
-            DETECTED_WS_IDS="${DETECTED_WS_IDS};${wid}"
-        fi
-    fi
-done
-
-FINAL_WORKSHOP_IDS="${WORKSHOP_IDS:-}"
-if [ -n "${DETECTED_WS_IDS}" ]; then
-    if [ -n "${FINAL_WORKSHOP_IDS}" ]; then
-        FINAL_WORKSHOP_IDS="${FINAL_WORKSHOP_IDS};${DETECTED_WS_IDS}"
-    else
-        FINAL_WORKSHOP_IDS="${DETECTED_WS_IDS}"
-    fi
-fi
-if [ -n "${FINAL_WORKSHOP_IDS}" ]; then
-    echo "Workshop items: ${FINAL_WORKSHOP_IDS}"
-fi
+## create symlinks for workshop mods
 
 echo "Creating symlinks for workshop mods..."
 mkdir -p /mnt/server/Zomboid/Server /mnt/server/Zomboid/mods
@@ -261,80 +186,6 @@ print(','.join(items))
     echo "Collection download complete."
 fi
 
-echo "Detecting mod IDs from workshop items..."
-DETECTED_MODS=""
-for wid_dir in /home/container/steamapps/workshop/content/108600/*/; do
-    if [ -d "${wid_dir}" ]; then
-        for mod_info in "${wid_dir}"mods/*/mod.info; do
-            if [ -f "${mod_info}" ]; then
-                mod_id="$(sed -n '/^[Ii][Dd]=/{s/^[Ii][Dd]=//;s/\r$//;p;q}' "${mod_info}")"
-                if [ -n "${mod_id}" ]; then
-                    if [ -z "${DETECTED_MODS}" ]; then
-                        DETECTED_MODS="${mod_id}"
-                    else
-                        DETECTED_MODS="${DETECTED_MODS};${mod_id}"
-                    fi
-                fi
-            fi
-        done
-    fi
-done
-FINAL_MODS="${DETECTED_MODS}"
-if [ -n "${MOD_IDS:-}" ]; then
-    FILTERED_MOD_IDS=""
-    OLD_IFS="${IFS}"
-    IFS=";,"
-    for mid in ${MOD_IDS}; do
-        mid_trimmed="$(echo "${mid}" | xargs)"
-        if [ -n "${mid_trimmed}" ]; then
-            # Skip purely numeric IDs that look like workshop IDs
-            if echo "${mid_trimmed}" | grep -qE '^[0-9]+$'; then
-                continue
-            fi
-            if [ -z "${FILTERED_MOD_IDS}" ]; then
-                FILTERED_MOD_IDS="${mid_trimmed}"
-            else
-                FILTERED_MOD_IDS="${FILTERED_MOD_IDS};${mid_trimmed}"
-            fi
-        fi
-    done
-    IFS="${OLD_IFS}"
-    if [ -n "${FILTERED_MOD_IDS}" ]; then
-        if [ -n "${FINAL_MODS}" ]; then
-            FINAL_MODS="${FINAL_MODS};${FILTERED_MOD_IDS}"
-        else
-            FINAL_MODS="${FILTERED_MOD_IDS}"
-        fi
-    fi
-fi
-if [ -n "${FINAL_MODS}" ]; then
-    echo "Mod IDs: ${FINAL_MODS}"
-fi
-
-## detect workshop item IDs from downloaded content
-DETECTED_WS_IDS=""
-for wid_dir in /home/container/steamapps/workshop/content/108600/*/; do
-    if [ -d "${wid_dir}" ]; then
-        wid="$(basename "${wid_dir}")"
-        if [ -z "${DETECTED_WS_IDS}" ]; then
-            DETECTED_WS_IDS="${wid}"
-        else
-            DETECTED_WS_IDS="${DETECTED_WS_IDS};${wid}"
-        fi
-    fi
-done
-FINAL_WORKSHOP_IDS="${WORKSHOP_IDS:-}"
-if [ -n "${DETECTED_WS_IDS}" ]; then
-    if [ -n "${FINAL_WORKSHOP_IDS}" ]; then
-        FINAL_WORKSHOP_IDS="${FINAL_WORKSHOP_IDS};${DETECTED_WS_IDS}"
-    else
-        FINAL_WORKSHOP_IDS="${DETECTED_WS_IDS}"
-    fi
-fi
-if [ -n "${FINAL_WORKSHOP_IDS}" ]; then
-    echo "Workshop items: ${FINAL_WORKSHOP_IDS}"
-fi
-
 mkdir -p /home/container/Zomboid/{Server,mods}
 
 echo "Creating/updating symlinks for workshop mods..."
@@ -370,8 +221,8 @@ PublicDescription=
 MaxPlayers=${MAX_PLAYERS}
 ServerPlayerID=${PRESET_ADMIN_USERNAME}
 PauseEmpty=${PAUSE_WHEN_EMPTY}
-Mods=${FINAL_MODS}
-WorkshopItems=${FINAL_WORKSHOP_IDS}
+Mods=${MOD_IDS}
+WorkshopItems=${WORKSHOP_IDS}
 INIEOF
 else
     update_ini() {
@@ -391,8 +242,8 @@ else
     update_ini "MaxPlayers" "${MAX_PLAYERS}" "${INI_FILE}"
     update_ini "ServerPlayerID" "${PRESET_ADMIN_USERNAME}" "${INI_FILE}"
     update_ini "PauseEmpty" "${PAUSE_WHEN_EMPTY}" "${INI_FILE}"
-    update_ini "Mods" "${FINAL_MODS}" "${INI_FILE}"
-    update_ini "WorkshopItems" "${FINAL_WORKSHOP_IDS}" "${INI_FILE}"
+    update_ini "Mods" "${MOD_IDS}" "${INI_FILE}"
+    update_ini "WorkshopItems" "${WORKSHOP_IDS}" "${INI_FILE}"
 fi
 
 export JVM_OPTS
