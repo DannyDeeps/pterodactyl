@@ -5,7 +5,7 @@
   },
   "exported_at": "2026-07-04T00:00:00+00:00",
   "name": "Project Zomboid",
-  "author": "DannyDeeps <dannyhuggins@proton.me>",
+  "author": "dannyhuggins@proton.me",
   "description": "Custom-maintained Project Zomboid dedicated server. Supports Steam Workshop mods, multi-player configuration, and auto-updates. Build 41+ compatible.",
   "features": null,
   "docker_images": {
@@ -14,14 +14,9 @@
   "file_denylist": [],
   "startup": "bash start.sh",
   "config": {
-    "files": {},
-    "startup": {
-      "done": "Server is online"
-    },
-    "logs": {
-      "custom": true,
-      "location": "Zomboid/Logs/{{SERVER_NAME}}*.txt"
-    },
+    "files": "{}",
+    "startup": "{\"done\": \"Server is online\", \"userInteraction\": []}",
+    "logs": "{\"custom\": true, \"location\": \"Zomboid/Logs/{{SERVER_NAME}}*.txt\"}",
     "stop": "quit"
   },
   "scripts": {
