@@ -110,6 +110,32 @@ if [ -n "${FINAL_MODS}" ]; then
     echo "Detected mod IDs: ${FINAL_MODS}"
 fi
 
+## detect workshop item IDs from downloaded content
+echo "Detecting downloaded workshop item IDs..."
+DETECTED_WS_IDS=""
+for wid_dir in /mnt/server/steamapps/workshop/content/108600/*/; do
+    if [ -d "${wid_dir}" ]; then
+        wid="$(basename "${wid_dir}")"
+        if [ -z "${DETECTED_WS_IDS}" ]; then
+            DETECTED_WS_IDS="${wid}"
+        else
+            DETECTED_WS_IDS="${DETECTED_WS_IDS};${wid}"
+        fi
+    fi
+done
+
+FINAL_WORKSHOP_IDS="${WORKSHOP_IDS:-}"
+if [ -n "${DETECTED_WS_IDS}" ]; then
+    if [ -n "${FINAL_WORKSHOP_IDS}" ]; then
+        FINAL_WORKSHOP_IDS="${FINAL_WORKSHOP_IDS};${DETECTED_WS_IDS}"
+    else
+        FINAL_WORKSHOP_IDS="${DETECTED_WS_IDS}"
+    fi
+fi
+if [ -n "${FINAL_WORKSHOP_IDS}" ]; then
+    echo "Workshop items: ${FINAL_WORKSHOP_IDS}"
+fi
+
 echo "Creating symlinks for workshop mods..."
 mkdir -p /mnt/server/Zomboid/Server /mnt/server/Zomboid/mods
 for wid_dir in /mnt/server/steamapps/workshop/content/108600/*/; do
@@ -234,6 +260,30 @@ if [ -n "${FINAL_MODS}" ]; then
     echo "Mod IDs: ${FINAL_MODS}"
 fi
 
+## detect workshop item IDs from downloaded content
+DETECTED_WS_IDS=""
+for wid_dir in /home/container/steamapps/workshop/content/108600/*/; do
+    if [ -d "${wid_dir}" ]; then
+        wid="$(basename "${wid_dir}")"
+        if [ -z "${DETECTED_WS_IDS}" ]; then
+            DETECTED_WS_IDS="${wid}"
+        else
+            DETECTED_WS_IDS="${DETECTED_WS_IDS};${wid}"
+        fi
+    fi
+done
+FINAL_WORKSHOP_IDS="${WORKSHOP_IDS:-}"
+if [ -n "${DETECTED_WS_IDS}" ]; then
+    if [ -n "${FINAL_WORKSHOP_IDS}" ]; then
+        FINAL_WORKSHOP_IDS="${FINAL_WORKSHOP_IDS};${DETECTED_WS_IDS}"
+    else
+        FINAL_WORKSHOP_IDS="${DETECTED_WS_IDS}"
+    fi
+fi
+if [ -n "${FINAL_WORKSHOP_IDS}" ]; then
+    echo "Workshop items: ${FINAL_WORKSHOP_IDS}"
+fi
+
 mkdir -p /home/container/Zomboid/{Server,mods}
 
 echo "Creating/updating symlinks for workshop mods..."
@@ -270,7 +320,7 @@ MaxPlayers=${MAX_PLAYERS}
 ServerPlayerID=${PRESET_ADMIN_USERNAME}
 PauseEmpty=${PAUSE_WHEN_EMPTY}
 Mods=${FINAL_MODS}
-WorkshopItems=${WORKSHOP_IDS}
+WorkshopItems=${FINAL_WORKSHOP_IDS}
 INIEOF
 else
     update_ini() {
@@ -291,7 +341,7 @@ else
     update_ini "ServerPlayerID" "${PRESET_ADMIN_USERNAME}" "${INI_FILE}"
     update_ini "PauseEmpty" "${PAUSE_WHEN_EMPTY}" "${INI_FILE}"
     update_ini "Mods" "${FINAL_MODS}" "${INI_FILE}"
-    update_ini "WorkshopItems" "${WORKSHOP_IDS}" "${INI_FILE}"
+    update_ini "WorkshopItems" "${FINAL_WORKSHOP_IDS}" "${INI_FILE}"
 fi
 
 export JVM_OPTS
