@@ -48,7 +48,7 @@ if [ -n "${WORKSHOP_IDS:-}" ]; then
             +quit || echo "  [WARN] SteamCMD workshop download returned exit code $?"
     fi
     echo "Workshop mod download complete."
-    chmod -R o+w /mnt/server/steamapps/workshop/ || true
+    [ -d /mnt/server/steamapps/workshop/ ] && chmod -R o+w /mnt/server/steamapps/workshop/ || true
 fi
 
 ## create symlinks for workshop mods
