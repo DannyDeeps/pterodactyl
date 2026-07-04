@@ -51,39 +51,6 @@ if [ -n "${WORKSHOP_IDS:-}" ]; then
     chmod -R o+w /mnt/server/steamapps/workshop/ || true
 fi
 
-## download workshop collection via Steam API
-if [ -n "${COLLECTION_ID:-}" ]; then
-    echo "Resolving workshop collection: ${COLLECTION_ID}..."
-    COLLECTION_JSON="$(curl -s -X POST https://api.steampowered.com/ISteamRemoteStorage/GetCollectionDetails/v1/ \
-        -d "collectioncount=1" \
-        -d "publishedfileids[0]=${COLLECTION_ID}")"
-    COLLECTION_ITEMS="$(echo "${COLLECTION_JSON}" | python3 -c "
-import json,sys
-data = json.load(sys.stdin)
-items = []
-for child in data['response']['collectiondetails'][0]['children']:
-    items.append(str(child['publishedfileid']))
-print(','.join(items))
-" 2>/dev/null)"
-    if [ -n "${COLLECTION_ITEMS}" ]; then
-        echo "Collection contains items: ${COLLECTION_ITEMS}"
-        OLD_IFS="${IFS}"
-        IFS=","
-        for ci in ${COLLECTION_ITEMS}; do
-            echo "  Downloading workshop item: ${ci}"
-            ./steamcmd/steamcmd.sh \
-                +login anonymous \
-                +workshop_download_item 108600 "${ci}" \
-                +quit || echo "  [WARN] Failed to download collection item ${ci}"
-        done
-        IFS="${OLD_IFS}"
-    else
-        echo "  [WARN] Failed to resolve collection ${COLLECTION_ID} or collection is empty"
-    fi
-    echo "Collection download complete."
-    chmod -R o+w /mnt/server/steamapps/workshop/ || true
-fi
-
 ## create symlinks for workshop mods
 
 echo "Creating symlinks for workshop mods..."
@@ -125,7 +92,6 @@ PRESET_ADMIN_USERNAME="${PRESET_ADMIN_USERNAME:-admin}"
 PAUSE_WHEN_EMPTY="${PAUSE_WHEN_EMPTY:-true}"
 MOD_IDS="${MOD_IDS:-}"
 WORKSHOP_IDS="${WORKSHOP_IDS:-}"
-COLLECTION_ID="${COLLECTION_ID:-}"
 SERVER_PASSWORD="${SERVER_PASSWORD:-}"
 JVM_OPTS="${JVM_OPTS:--Xmx8G -Xms4G}"
 AUTO_UPDATE="${AUTO_UPDATE:-true}"
@@ -152,38 +118,6 @@ if [ -n "${WORKSHOP_IDS:-}" ]; then
         steamcmd             +force_install_dir /home/container             +login anonymous             "${WS_ARGS[@]}"             +quit || echo "  [WARN] SteamCMD workshop download returned exit code $?"
     fi
     echo "Workshop mod download complete."
-fi
-
-if [ -n "${COLLECTION_ID:-}" ]; then
-    echo "Resolving workshop collection: ${COLLECTION_ID}..."
-    COLLECTION_JSON="$(curl -s -X POST https://api.steampowered.com/ISteamRemoteStorage/GetCollectionDetails/v1/ \
-        -d "collectioncount=1" \
-        -d "publishedfileids[0]=${COLLECTION_ID}")"
-    COLLECTION_ITEMS="$(echo "${COLLECTION_JSON}" | python3 -c "
-import json,sys
-data = json.load(sys.stdin)
-items = []
-for child in data['response']['collectiondetails'][0]['children']:
-    items.append(str(child['publishedfileid']))
-print(','.join(items))
-" 2>/dev/null)"
-    if [ -n "${COLLECTION_ITEMS}" ]; then
-        echo "Collection contains items: ${COLLECTION_ITEMS}"
-        OLD_IFS="${IFS}"
-        IFS=","
-        for ci in ${COLLECTION_ITEMS}; do
-            echo "  Downloading workshop item: ${ci}"
-            steamcmd \
-                +force_install_dir /home/container \
-                +login anonymous \
-                +workshop_download_item 108600 "${ci}" \
-                +quit || echo "  [WARN] Failed to download collection item ${ci}"
-        done
-        IFS="${OLD_IFS}"
-    else
-        echo "  [WARN] Failed to resolve collection ${COLLECTION_ID} or collection is empty"
-    fi
-    echo "Collection download complete."
 fi
 
 mkdir -p /home/container/Zomboid/{Server,mods}
