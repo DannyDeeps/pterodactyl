@@ -41,6 +41,12 @@ RUN mkdir -p /opt/steamcmd \
     && chmod +x /usr/local/bin/steamcmd \
     && ln -sf /usr/local/bin/steamcmd /usr/bin/steamcmd
 
+# Run steamcmd self-update during build so all created files get world-writable permissions
+# for the non-root runtime user
+RUN steamcmd +quit 2>/dev/null || true; \
+    chmod -R a+w /opt/steamcmd; \
+    rm -rf /home/container/Steam
+
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US.UTF-8 \
     LC_ALL=en_US.UTF-8
