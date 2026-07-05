@@ -27,6 +27,46 @@ echo "Installing Project Zomboid Dedicated Server..."
 echo "Game installed. Setting permissions..."
 chmod -R o+w /mnt/server/steamapps/ || true
 
+## download workshop mods
+if [ -n "${WORKSHOP_IDS:-}" ]; then
+    echo "Downloading workshop mods..."
+    WS_ARGS=()
+    OLD_IFS="${IFS}"
+    IFS=";,"
+    for wid in ${WORKSHOP_IDS}; do
+        wid_trimmed="$(echo "${wid}" | xargs)"
+        if [ -n "${wid_trimmed}" ]; then
+            echo "  Queueing workshop item: ${wid_trimmed}"
+            WS_ARGS+=(+workshop_download_item 108600 "${wid_trimmed}")
+        fi
+    done
+    IFS="${OLD_IFS}"
+    if [ ${#WS_ARGS[@]} -gt 0 ]; then
+        ./steamcmd/steamcmd.sh \
+            +login anonymous \
+            "${WS_ARGS[@]}" \
+            +quit || echo "  [WARN] SteamCMD workshop download returned exit code $?"
+    fi
+    echo "Workshop mod download complete."
+    [ -d /mnt/server/steamapps/workshop/ ] && chmod -R o+w /mnt/server/steamapps/workshop/ || true
+fi
+
+## fix case sensitivity for workshop mods (create lowercase symlinks for all files/dirs)
+WC108600="/mnt/server/steamapps/workshop/content/108600"
+if [ -d "${WC108600}" ]; then
+    echo "Creating case-insensitive symlinks for workshop mods..."
+    find "${WC108600}" -depth -print0 2>/dev/null | while IFS= read -r -d '' path; do
+        dir=$(dirname "${path}")
+        base=$(basename "${path}")
+        lower=$(echo "${base}" | tr '[:upper:]' '[:lower:]')
+        lcpath="${dir}/${lower}"
+        if [ "${path}" != "${lcpath}" ] && [ ! -e "${lcpath}" ]; then
+            ln -s "${base}" "${lcpath}" 2>/dev/null || true
+        fi
+    done
+    echo "  Case fix complete."
+fi
+
 echo "Creating server directories..."
 mkdir -p /mnt/server/Zomboid/Server /mnt/server/Zomboid/mods
 
@@ -54,6 +94,42 @@ AUTO_UPDATE="${AUTO_UPDATE:-true}"
 if [ "${AUTO_UPDATE}" = "true" ]; then
     echo "Running auto-update via SteamCMD..."
     steamcmd         +force_install_dir /home/container         +login anonymous         +app_update 380870 -beta "${STEAM_BRANCH}" validate         +quit || echo "[WARN] SteamCMD auto-update returned exit code $?, continuing..."
+fi
+
+## download workshop mods
+if [ -n "${WORKSHOP_IDS:-}" ]; then
+    echo "Downloading/updating workshop mods..."
+    WS_ARGS=()
+    OLD_IFS="${IFS}"
+    IFS=";,"
+    for wid in ${WORKSHOP_IDS}; do
+        wid_trimmed="$(echo "${wid}" | xargs)"
+        if [ -n "${wid_trimmed}" ]; then
+            echo "  Workshop item: ${wid_trimmed}"
+            WS_ARGS+=(+workshop_download_item 108600 "${wid_trimmed}")
+        fi
+    done
+    IFS="${OLD_IFS}"
+    if [ ${#WS_ARGS[@]} -gt 0 ]; then
+        steamcmd             +force_install_dir /home/container             +login anonymous             "${WS_ARGS[@]}"             +quit || echo "  [WARN] SteamCMD workshop download returned exit code $?"
+    fi
+    echo "Workshop mod download complete."
+fi
+
+## fix case sensitivity for workshop mods (create lowercase symlinks for all files/dirs)
+WC108600="/home/container/steamapps/workshop/content/108600"
+if [ -d "${WC108600}" ]; then
+    echo "Creating case-insensitive symlinks for workshop mods..."
+    find "${WC108600}" -depth -print0 2>/dev/null | while IFS= read -r -d '' path; do
+        dir=$(dirname "${path}")
+        base=$(basename "${path}")
+        lower=$(echo "${base}" | tr '[:upper:]' '[:lower:]')
+        lcpath="${dir}/${lower}"
+        if [ "${path}" != "${lcpath}" ] && [ ! -e "${lcpath}" ]; then
+            ln -s "${base}" "${lcpath}" 2>/dev/null || true
+        fi
+    done
+    echo "  Case fix complete."
 fi
 
 mkdir -p /home/container/Zomboid/{Server,mods}
