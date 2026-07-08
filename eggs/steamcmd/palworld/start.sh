@@ -87,8 +87,7 @@ echo "Configuration written to ${CONFIG_FILE}"
 ARGS=()
 ARGS+=("-port=${SERVER_PORT}")
 ARGS+=("-players=${MAX_PLAYERS}")
-ARGS+=("-log")
-ARGS+=("-logformat=text")
+ARGS+=("-stdout")
 
 if [ "${PUBLIC_LOBBY}" = "true" ]; then
     ARGS+=("-publiclobby")
