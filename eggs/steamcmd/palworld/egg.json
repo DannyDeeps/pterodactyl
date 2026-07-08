@@ -15,7 +15,7 @@
   "startup": "bash start.sh",
   "config": {
     "files": "{}",
-    "startup": "{\"done\": \"LogLoad\", \"userInteraction\": []}",
+    "startup": "{\"done\": \"Running Palworld dedicated server on\", \"userInteraction\": []}",
     "logs": "{\"custom\": true, \"location\": \"Pal/Binaries/***/PalworldServer.log\"}",
     "stop": "^C"
   },

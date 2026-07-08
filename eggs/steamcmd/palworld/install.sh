@@ -19,6 +19,7 @@ export STEAMCMD_DIR="./steamcmd"
 ## install game
 echo "Installing Palworld Dedicated Server..."
 ./steamcmd/steamcmd.sh \
+    +@sSteamCmdForcePlatformType linux \
     +force_install_dir /mnt/server \
     +login anonymous \
     +app_update 2394010 validate \
@@ -57,6 +58,7 @@ WORKER_THREADS="${WORKER_THREADS:-}"
 if [ "${AUTO_UPDATE}" = "true" ]; then
     echo "Running auto-update via SteamCMD..."
     steamcmd \
+        +@sSteamCmdForcePlatformType linux \
         +force_install_dir /home/container \
         +login anonymous \
         +app_update 2394010 validate \
