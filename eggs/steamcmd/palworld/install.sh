@@ -120,8 +120,6 @@ echo "Configuration written to ${CONFIG_FILE}"
 ## build server arguments
 ARGS=()
 ARGS+=("-port=${SERVER_PORT}")
-ARGS+=("-players=${MAX_PLAYERS}")
-ARGS+=("-stdout")
 
 if [ "${PUBLIC_LOBBY}" = "true" ]; then
     ARGS+=("-publiclobby")
