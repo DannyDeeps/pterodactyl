@@ -1,0 +1,181 @@
+{
+  "meta": {
+    "version": "PTDL_v2",
+    "update_url": null
+  },
+  "exported_at": "2026-07-07T00:00:00+00:00",
+  "name": "Palworld",
+  "author": "dannyhuggins@proton.me",
+  "description": "Custom-maintained Palworld dedicated server. Supports community server listing, RCON, REST API, multi-threaded performance optimizations, and auto-updates. Palworld 1.0 compatible.",
+  "features": null,
+  "docker_images": {
+    "Palworld (Debian + SteamCMD)": "ghcr.io/dannydeeps/yolks:palworld"
+  },
+  "file_denylist": [],
+  "startup": "bash start.sh",
+  "config": {
+    "files": "{}",
+    "startup": "{\"done\": \"LogLoad\", \"userInteraction\": []}",
+    "logs": "{\"custom\": true, \"location\": \"Pal/Binaries/***/PalworldServer.log\"}",
+    "stop": "^C"
+  },
+  "scripts": {
+    "installation": {
+      "script": "#!/bin/bash\nset -euo pipefail\n\ncd /mnt/server\n\n## download and install steamcmd\nSTEAMCMD_URL=\"https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\"\nif [ ! -f \"steamcmd/steamcmd.sh\" ]; then\n    echo \"Installing SteamCMD...\"\n    mkdir -p steamcmd\n    curl -sSL \"${STEAMCMD_URL}\" | tar -xvzf - -C steamcmd/\n    chmod +x steamcmd/steamcmd.sh\nelse\n    echo \"SteamCMD already installed, skipping download.\"\nfi\n\nexport STEAMCMD_DIR=\"./steamcmd\"\n\n## install game\necho \"Installing Palworld Dedicated Server...\"\n./steamcmd/steamcmd.sh \\\n    +force_install_dir /mnt/server \\\n    +login anonymous \\\n    +app_update 2394010 validate \\\n    +quit || echo \"[WARN] SteamCMD install returned exit code $?\"\n\necho \"Game installed. Setting permissions...\"\nchmod -R o+w /mnt/server/steamapps/ || true\nchmod +x /mnt/server/PalServer.sh || true\n\n## create start.sh\necho \"Generating start.sh...\"\ncat > /mnt/server/start.sh << 'STARTSCRIPT'\n#!/bin/bash\nset -euo pipefail\n\ncd /home/container\n\n## read env vars with defaults\nSERVER_NAME=\"${SERVER_NAME:-Palworld Server}\"\nSERVER_DESCRIPTION=\"${SERVER_DESCRIPTION:-}\"\nADMIN_PASSWORD=\"${ADMIN_PASSWORD:-}\"\nSERVER_PASSWORD=\"${SERVER_PASSWORD:-}\"\nSERVER_PORT=\"${SERVER_PORT:-8211}\"\nMAX_PLAYERS=\"${MAX_PLAYERS:-32}\"\nPUBLIC_LOBBY=\"${PUBLIC_LOBBY:-false}\"\nPUBLIC_IP=\"${PUBLIC_IP:-}\"\nPUBLIC_PORT=\"${PUBLIC_PORT:-}\"\nRCON_ENABLED=\"${RCON_ENABLED:-false}\"\nRCON_PORT=\"${RCON_PORT:-25575}\"\nREST_API_ENABLED=\"${REST_API_ENABLED:-false}\"\nREST_API_PORT=\"${REST_API_PORT:-8212}\"\nAUTO_UPDATE=\"${AUTO_UPDATE:-true}\"\nUSE_PERF_THREADS=\"${USE_PERF_THREADS:-true}\"\nWORKER_THREADS=\"${WORKER_THREADS:-}\"\n\nif [ \"${AUTO_UPDATE}\" = \"true\" ]; then\n    echo \"Running auto-update via SteamCMD...\"\n    steamcmd \\\n        +force_install_dir /home/container \\\n        +login anonymous \\\n        +app_update 2394010 validate \\\n        +quit || echo \"[WARN] SteamCMD auto-update returned exit code $?, continuing...\"\nfi\n\n## ensure config directory exists\nmkdir -p /home/container/Pal/Saved/Config/LinuxServer\n\nCONFIG_FILE=\"/home/container/Pal/Saved/Config/LinuxServer/PalWorldSettings.ini\"\n\n## build OptionSettings string\nOPTIONS=\"\"\nappend_opt() {\n    local key=\"$1\"\n    local value=\"$2\"\n    if [ -n \"${OPTIONS}\" ]; then\n        OPTIONS=\"${OPTIONS},\"\n    fi\n    OPTIONS=\"${OPTIONS}${key}=\\\"${value}\\\"\"\n}\n\nappend_opt \"RCONEnabled\" \"${RCON_ENABLED}\"\nappend_opt \"RCONPort\" \"${RCON_PORT}\"\nappend_opt \"RESTAPIEnabled\" \"${REST_API_ENABLED}\"\nappend_opt \"RESTAPIPort\" \"${REST_API_PORT}\"\n\nif [ -n \"${SERVER_DESCRIPTION}\" ]; then\n    append_opt \"ServerDescription\" \"${SERVER_DESCRIPTION}\"\nfi\n\nif [ -n \"${ADMIN_PASSWORD}\" ]; then\n    append_opt \"AdminPassword\" \"${ADMIN_PASSWORD}\"\nfi\n\nif [ -n \"${SERVER_PASSWORD}\" ]; then\n    append_opt \"ServerPassword\" \"${SERVER_PASSWORD}\"\nfi\n\nappend_opt \"ServerName\" \"${SERVER_NAME}\"\nappend_opt \"ServerPlayerMaxNum\" \"${MAX_PLAYERS}\"\n\n## write config file\n{\n    echo \"[/Script/Pal.PalGameWorldSettings]\"\n    echo \"OptionSettings=(${OPTIONS})\"\n} > \"${CONFIG_FILE}\"\n\necho \"Configuration written to ${CONFIG_FILE}\"\n\n## build server arguments\nARGS=()\nARGS+=(\"-port=${SERVER_PORT}\")\nARGS+=(\"-players=${MAX_PLAYERS}\")\n\nif [ \"${PUBLIC_LOBBY}\" = \"true\" ]; then\n    ARGS+=(\"-publiclobby\")\n    if [ -n \"${PUBLIC_IP}\" ]; then\n        ARGS+=(\"-publicip=${PUBLIC_IP}\")\n    fi\n    if [ -n \"${PUBLIC_PORT}\" ]; then\n        ARGS+=(\"-publicport=${PUBLIC_PORT}\")\n    fi\nfi\n\nif [ \"${USE_PERF_THREADS}\" = \"true\" ]; then\n    ARGS+=(\"-useperfthreads\" \"-NoAsyncLoadingThread\" \"-UseMultithreadForDS\")\n    if [ -n \"${WORKER_THREADS}\" ]; then\n        ARGS+=(\"-NumberOfWorkerThreadsServer=${WORKER_THREADS}\")\n    fi\nfi\n\necho \"Starting Palworld server: ${SERVER_NAME}\"\necho \"Port: ${SERVER_PORT} | Max Players: ${MAX_PLAYERS} | Public: ${PUBLIC_LOBBY}\"\n\nexec ./PalServer.sh \"${ARGS[@]}\"\nSTARTSCRIPT\n\nchmod +x /mnt/server/start.sh\n\necho \"Installation complete.\"\n",
+      "container": "ghcr.io/dannydeeps/yolks:palworld",
+      "entrypoint": "bash"
+    }
+  },
+  "variables": [
+    {
+      "name": "Server Name",
+      "description": "The name of your Palworld server as shown in the server browser",
+      "env_variable": "SERVER_NAME",
+      "default_value": "Palworld Server",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|max:80",
+      "field_type": "text"
+    },
+    {
+      "name": "Server Description",
+      "description": "Description of your server shown in the server browser",
+      "env_variable": "SERVER_DESCRIPTION",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "nullable|string|max:500",
+      "field_type": "text"
+    },
+    {
+      "name": "Admin Password",
+      "description": "Password used to obtain administrative privileges on the server",
+      "env_variable": "ADMIN_PASSWORD",
+      "default_value": "",
+      "user_viewable": false,
+      "user_editable": true,
+      "rules": "nullable|string|max:40",
+      "field_type": "text"
+    },
+    {
+      "name": "Server Password",
+      "description": "Password required for players to join the server. Leave empty for no password.",
+      "env_variable": "SERVER_PASSWORD",
+      "default_value": "",
+      "user_viewable": false,
+      "user_editable": true,
+      "rules": "nullable|string|max:40",
+      "field_type": "text"
+    },
+    {
+      "name": "Max Players",
+      "description": "Maximum number of players who can join the server",
+      "env_variable": "MAX_PLAYERS",
+      "default_value": "32",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|integer|min:1|max:100",
+      "field_type": "text"
+    },
+    {
+      "name": "Public Lobby",
+      "description": "Register this server as a community server on the public server list",
+      "env_variable": "PUBLIC_LOBBY",
+      "default_value": "false",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|in:true,false",
+      "field_type": "text"
+    },
+    {
+      "name": "Public IP",
+      "description": "Manually specify the external public IP for community server listing. Auto-detected if left empty.",
+      "env_variable": "PUBLIC_IP",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "nullable|string|max:45",
+      "field_type": "text"
+    },
+    {
+      "name": "Public Port",
+      "description": "Manually specify the external public port for community server listing. Does not change the listening port.",
+      "env_variable": "PUBLIC_PORT",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "nullable|integer|min:1024|max:65535",
+      "field_type": "text"
+    },
+    {
+      "name": "RCON Enabled",
+      "description": "Enable RCON remote administration",
+      "env_variable": "RCON_ENABLED",
+      "default_value": "false",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|in:true,false",
+      "field_type": "text"
+    },
+    {
+      "name": "RCON Port",
+      "description": "Port number used for RCON connections",
+      "env_variable": "RCON_PORT",
+      "default_value": "25575",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|integer|min:1024|max:65535",
+      "field_type": "text"
+    },
+    {
+      "name": "REST API Enabled",
+      "description": "Enable the REST API for server management",
+      "env_variable": "REST_API_ENABLED",
+      "default_value": "false",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|in:true,false",
+      "field_type": "text"
+    },
+    {
+      "name": "REST API Port",
+      "description": "Listening port for the REST API",
+      "env_variable": "REST_API_PORT",
+      "default_value": "8212",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|integer|min:1024|max:65535",
+      "field_type": "text"
+    },
+    {
+      "name": "Auto Update",
+      "description": "Automatically update the server via SteamCMD on restart",
+      "env_variable": "AUTO_UPDATE",
+      "default_value": "true",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|in:true,false",
+      "field_type": "text"
+    },
+    {
+      "name": "Use Performance Threads",
+      "description": "Enable multi-threaded CPU performance optimizations",
+      "env_variable": "USE_PERF_THREADS",
+      "default_value": "true",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "required|string|in:true,false",
+      "field_type": "text"
+    },
+    {
+      "name": "Worker Threads",
+      "description": "Number of worker threads for multi-threaded processing. Maximum is CPU thread count minus 1. Leave empty for default.",
+      "env_variable": "WORKER_THREADS",
+      "default_value": "",
+      "user_viewable": true,
+      "user_editable": true,
+      "rules": "nullable|integer|min:1|max:64",
+      "field_type": "text"
+    }
+  ]
+}
