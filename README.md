@@ -6,8 +6,8 @@ My personal collection of Pterodactyl Eggs & Yolks.
 
 ```
 yolks/                          # Docker images (runtime environments)
-  palworld/                     # Debian + SteamCMD for Palworld
-  project-zomboid/              # Debian + SteamCMD + Java 17 for PZ
+  steamcmd/                     # Debian + SteamCMD (base)
+  steamcmd-java17/              # Extends steamcmd + Java 17 for PZ
   composer-php-app/             # Alpine + PHP 8 for composer apps
 
 eggs/                           # Pterodactyl egg definitions
@@ -31,12 +31,15 @@ eggs/                           # Pterodactyl egg definitions
 
 ## Usage
 
-1. Build the yolk (Docker image) and push to a registry:
+1. Build the yolks (Docker images) and push to a registry:
    ```bash
-   docker build -t ghcr.io/dannydeeps/yolks:palworld yolks/palworld/
-   docker push ghcr.io/dannydeeps/yolks:palworld
-   docker build -t ghcr.io/dannydeeps/yolks:project-zomboid yolks/project-zomboid/
-   docker push ghcr.io/dannydeeps/yolks:project-zomboid
+   # Base SteamCMD image (build first)
+   docker build -t ghcr.io/dannydeeps/yolks:steamcmd yolks/steamcmd/
+   docker push ghcr.io/dannydeeps/yolks:steamcmd
+
+   # Java 17 variant (extends base — must build after base)
+   docker build -t ghcr.io/dannydeeps/yolks:steamcmd-java17 yolks/steamcmd-java17/
+   docker push ghcr.io/dannydeeps/yolks:steamcmd-java17
    ```
 
 2. Import the egg in Pterodactyl Admin Panel:

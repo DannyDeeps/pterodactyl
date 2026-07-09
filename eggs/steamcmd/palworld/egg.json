@@ -11,7 +11,7 @@
     "steam_disk_space"
   ],
   "docker_images": {
-    "Palworld (Debian + SteamCMD)": "ghcr.io/dannydeeps/yolks:palworld"
+    "Palworld (SteamCMD)": "ghcr.io/dannydeeps/yolks:steamcmd"
   },
   "file_denylist": [
     "PalServer.sh"
@@ -26,7 +26,7 @@
   "scripts": {
     "installation": {
       "script": "#!/bin/bash\nset -euo pipefail\n\ncd /mnt/server\n\n## download and install steamcmd\nSTEAMCMD_URL=\"https://steamcdn-a.akamaihd.net/client/installer/steamcmd_linux.tar.gz\"\nif [ ! -f \"steamcmd/steamcmd.sh\" ]; then\n    echo \"Installing SteamCMD...\"\n    mkdir -p steamcmd\n    curl -sSL \"${STEAMCMD_URL}\" | tar -xvzf - -C steamcmd/\n    chmod +x steamcmd/steamcmd.sh\nelse\n    echo \"SteamCMD already installed, skipping download.\"\nfi\n\nexport STEAMCMD_DIR=\"./steamcmd\"\n\n## install game\necho \"Installing Palworld Dedicated Server...\"\n./steamcmd/steamcmd.sh \\\n    +@sSteamCmdForcePlatformType linux \\\n    +force_install_dir /mnt/server \\\n    +login anonymous \\\n    +app_update 2394010 validate \\\n    +quit || echo \"[WARN] SteamCMD install returned exit code $?\"\n\necho \"Game installed. Setting permissions...\"\nchmod -R o+w /mnt/server/steamapps/ || true\nchmod +x /mnt/server/PalServer.sh || true\n\n## set up 64 bit libraries\nmkdir -p /mnt/server/.steam/sdk64\ncp -v steamcmd/linux64/steamclient.so /mnt/server/.steam/sdk64/steamclient.so || true\n\n## copy template config file\necho \"Copying template config file...\"\nif [ -f \"/mnt/server/DefaultPalWorldSettings.ini\" ]; then\n    mkdir -p \"/mnt/server/Pal/Saved/Config/LinuxServer\"\n    cp \"/mnt/server/DefaultPalWorldSettings.ini\" \"/mnt/server/Pal/Saved/Config/LinuxServer/PalWorldSettings.ini\"\n    echo \"Config file created from template.\"\nelse\n    echo \"No DefaultPalWorldSettings.ini found - server will create one on first start.\"\nfi\n\necho \"Installation complete.\"",
-      "container": "ghcr.io/dannydeeps/yolks:palworld",
+      "container": "ghcr.io/dannydeeps/yolks:steamcmd",
       "entrypoint": "bash"
     }
   },
