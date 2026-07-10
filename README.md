@@ -20,6 +20,10 @@ eggs/                           # Pterodactyl egg definitions
       egg.json                  # Importable egg definition
       install.sh                # Install script (SteamCMD + config setup)
       start.sh                  # Startup script (config gen + server launch)
+    runescape-dragonwilds/      # RuneScape: Dragonwilds server egg
+      egg.json                  # Importable egg definition
+      install.sh                # Install script (SteamCMD + config setup)
+      start.sh                  # Startup script (config gen + server launch)
 ```
 
 ## Eggs
@@ -28,6 +32,7 @@ eggs/                           # Pterodactyl egg definitions
 |-------------------|----------------|------------------------------------|
 | Palworld          | Active         | Custom yolk, auto-update, RCON, REST API |
 | Project Zomboid   | Active         | Custom yolk, auto-update, mods     |
+| RuneScape: Dragonwilds | Active     | SteamCMD, auto-update, config via env vars |
 
 ## Usage
 
@@ -44,5 +49,5 @@ eggs/                           # Pterodactyl egg definitions
 
 2. Import the egg in Pterodactyl Admin Panel:
    - Admin → Nests → Import Egg
-   - Select `eggs/steamcmd/palworld/egg.json` or `eggs/steamcmd/project-zomboid/egg.json`
+   - Select `eggs/steamcmd/palworld/egg.json`, `eggs/steamcmd/project-zomboid/egg.json`, or `eggs/steamcmd/runescape-dragonwilds/egg.json`
    - Update the Docker image URL to match your registry
